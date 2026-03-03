@@ -136,3 +136,5 @@ STATICFILES_DIRS = []
 CSRF_TRUSTED_ORIGINS = ['https://web-production-e5c79.up.railway.app', 'https://crm.biztraffics.in']
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+DJANGO_SUPERUSER_PASSWORD = 'admin123'
