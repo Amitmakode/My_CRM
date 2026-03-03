@@ -1,8 +1,28 @@
-*.pyc
+# Virtual Environment
+env/
+.venv/
+venv/
+
+# Python cache
 __pycache__/
+*.pyc
 *.pyo
+*.pyd
+
+# SQLite database (local only)
 db.sqlite3
-*.env
+
+# Environment variables
 .env
-staticfiles/
+
+# VS Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Logs
 *.log
+
+# Static files (optional if collected locally)
+staticfiles/
