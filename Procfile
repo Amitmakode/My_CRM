@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py createsuperuser --noinput --username admin --email admin@admin.com || true && gunicorn crm.wsgi --log-file -
+web: python manage.py migrate && gunicorn crm.wsgi --log-file -
