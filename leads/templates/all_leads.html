@@ -1,0 +1,392 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PropCRM — All Leads</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; overflow-x: hidden; }
+body { font-family: 'Sora', sans-serif; background: #F5F5F7; color: #1C1C1E; }
+
+:root {
+  --primary: #FF6B35;
+  --primary-light: #FFF3EE;
+  --bg: #F5F5F7;
+  --white: #FFFFFF;
+  --border: #E8E8EC;
+  --text: #1C1C1E;
+  --text-muted: #8E8E93;
+  --text-dim: #AEAEB2;
+  --hot: #FF3B30;
+  --warm: #FF9500;
+  --cold: #007AFF;
+  --success: #34C759;
+}
+
+.tbadge { padding: 3px 9px; border-radius: 7px; font-size: 11px; font-weight: 700; }
+.tb-hot { background: #FFF0EE; color: var(--hot); }
+.tb-warm { background: #FFF8EE; color: var(--warm); }
+.tb-cold { background: #EEF5FF; color: var(--cold); }
+.tb-dead { background: #F2F2F7; color: var(--text-muted); }
+.sp { display: inline-flex; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; }
+.sp-new { background: #EDFAF1; color: var(--success); }
+.sp-contacted { background: #EEF5FF; color: var(--cold); }
+.sp-visitscheduled { background: #FFF8EE; color: var(--warm); }
+.sp-visitdone { background: #FFF3EE; color: var(--primary); }
+.sp-negotiation { background: #F3EEFF; color: #7B52FF; }
+.sp-closedwon { background: #EDFAF1; color: var(--success); }
+.sp-closedlost { background: #FFF0EE; color: var(--hot); }
+.ndot { width: 8px; height: 8px; background: var(--hot); border-radius: 50%; position: absolute; top: 5px; right: 5px; border: 2px solid white; }
+
+/* DESKTOP */
+.desktop { display: none; min-height: 100vh; }
+
+.sidebar { width: 230px; background: var(--white); border-right: 1px solid var(--border); position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 100; }
+.brand { padding: 22px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.brand-logo { width: 38px; height: 38px; background: linear-gradient(135deg, var(--primary), #FF9A3C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 17px; font-weight: 800; flex-shrink: 0; }
+.brand-text .bname { font-size: 16px; font-weight: 800; }
+.brand-text .bsub { font-size: 11px; color: var(--text-muted); }
+.snav { padding: 16px 12px; flex: 1; }
+.grp-title { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 8px; margin: 12px 0 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-decoration: none; }
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.nav-item i { width: 16px; font-size: 13px; }
+.nbadge { margin-left: auto; background: var(--primary); color: white; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+.nav-item:not(.active) .nbadge { background: var(--bg); color: var(--text-muted); }
+.sfooter { padding: 14px 12px; border-top: 1px solid var(--border); }
+.user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.user-row:hover { background: var(--bg); }
+.ava { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #FF9A3C); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.uname { font-size: 13px; font-weight: 600; }
+.urole { font-size: 11px; color: var(--text-muted); }
+
+.dmain { margin-left: 230px; flex: 1; display: flex; flex-direction: column; }
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.greeting { font-size: 15px; font-weight: 700; }
+.greeting span { color: var(--primary); }
+.tbar-right { display: flex; align-items: center; gap: 10px; }
+.add-btn { display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--primary), #FF9A3C); color: white; border: none; border-radius: 10px; padding: 8px 16px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(255,107,53,0.3); text-decoration: none; }
+
+.dcontent { padding: 24px 28px; }
+.dtab-row { display: flex; gap: 6px; margin-bottom: 24px; }
+.dtab { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); background: var(--white); border: 1.5px solid var(--border); text-decoration: none; }
+.dtab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,107,53,0.25); }
+
+.filters {
+  background: var(--white); border-radius: 14px; border: 1px solid var(--border);
+  padding: 16px 20px; margin-bottom: 16px;
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+}
+
+.filter-select {
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 9px; padding: 7px 12px; font-size: 13px;
+  font-family: inherit; color: var(--text); cursor: pointer; outline: none;
+}
+
+.filter-select:focus { border-color: var(--primary); }
+
+.search-inp {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 9px; padding: 7px 12px; flex: 1; min-width: 180px;
+}
+
+.search-inp input { border: none; background: transparent; font-size: 13px; font-family: inherit; color: var(--text); outline: none; width: 100%; }
+
+.filter-btn { padding: 7px 14px; background: var(--primary); color: white; border: none; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.clear-btn { padding: 7px 14px; background: var(--bg); color: var(--text-muted); border: 1.5px solid var(--border); border-radius: 9px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; }
+
+.tcard { background: var(--white); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+.total-row { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
+.total-row strong { color: var(--text); }
+
+table { width: 100%; border-collapse: collapse; }
+th { padding: 10px 16px; text-align: left; font-size: 10px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; background: var(--bg); border-bottom: 1px solid var(--border); }
+td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #FAFAFA; }
+.tln { font-weight: 700; }
+.tlp { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.abts { display: flex; gap: 5px; }
+.abt { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--text-muted); text-decoration: none; transition: all 0.15s; }
+.abt:hover { background: var(--bg); }
+.abt.wa { color: var(--success); border-color: #B7ECC5; background: #EDFAF1; }
+.abt.del { color: var(--hot); border-color: #FFD0C0; background: #FFF0EE; }
+
+/* MOBILE */
+.mobile { display: none; flex-direction: column; width: 100%; min-height: 100vh; }
+.mob-top { position: sticky; top: 0; z-index: 100; width: 100%; }
+.mob-topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.mob-logo-wrap { display: flex; align-items: center; gap: 8px; }
+.mob-logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), #FF9A3C); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; }
+.mob-brand-name { font-size: 16px; font-weight: 800; }
+.mob-brand-name span { color: var(--primary); }
+.mob-actions { display: flex; gap: 8px; }
+.mob-add-btn { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #FF9A3C); border: none; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; box-shadow: 0 4px 12px rgba(255,107,53,0.35); text-decoration: none; }
+.mob-tabbar { background: var(--white); border-bottom: 1px solid var(--border); width: 100%; }
+.mob-tabs { display: flex; overflow-x: auto; scrollbar-width: none; padding: 0 16px; }
+.mob-tabs::-webkit-scrollbar { display: none; }
+.mob-tab { padding: 11px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; cursor: pointer; text-decoration: none; }
+.mob-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.mob-body { flex: 1; padding: 16px; padding-bottom: 85px; width: 100%; }
+
+.mob-filters { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-bottom: 16px; padding-bottom: 4px; }
+.mob-filters::-webkit-scrollbar { display: none; }
+.mob-filter-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 1.5px solid var(--border); background: var(--white); color: var(--text-muted); cursor: pointer; text-decoration: none; flex-shrink: 0; }
+.mob-filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+.mob-search { display: flex; align-items: center; gap: 8px; background: var(--white); border: 1.5px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; width: 100%; }
+.mob-search input { border: none; background: transparent; font-size: 13px; font-family: inherit; color: var(--text); outline: none; width: 100%; }
+
+.mcard { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; border-left: 4px solid #ddd; width: 100%; }
+.mcard.hot { border-left-color: var(--hot); }
+.mcard.warm { border-left-color: var(--warm); }
+.mcard.cold { border-left-color: var(--cold); }
+.mcard.dead { border-left-color: var(--text-dim); }
+.mc-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.mc-name { font-size: 15px; font-weight: 700; }
+.mc-phone { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.mc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.mc-tag { font-size: 11px; color: var(--text-muted); background: var(--bg); padding: 3px 8px; border-radius: 6px; display: flex; align-items: center; gap: 3px; }
+.mc-row2 { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border); margin-bottom: 10px; }
+.mc-budget { font-size: 14px; font-weight: 700; color: var(--primary); }
+.mc-assign { font-size: 11px; color: var(--text-muted); }
+.mc-btns { display: flex; gap: 8px; width: 100%; }
+.mc-btn { flex: 1; padding: 9px 4px; border-radius: 10px; border: 1.5px solid var(--border); background: transparent; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 4px; text-decoration: none; }
+.mc-btn.view { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+.mc-btn.call { background: #EEF5FF; color: var(--cold); border-color: #C7DEFF; }
+.mc-btn.wa { background: #EDFAF1; color: var(--success); border-color: #B7ECC5; }
+
+.mob-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--white); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; z-index: 200; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); width: 100%; }
+.bn-item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 6px 0; cursor: pointer; text-decoration: none; }
+.bn-item i { font-size: 20px; color: var(--text-dim); }
+.bn-lbl { font-size: 10px; font-weight: 600; color: var(--text-dim); }
+.bn-item.active i { color: var(--primary); }
+.bn-item.active .bn-lbl { color: var(--primary); }
+.bn-plus { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), #FF9A3C); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(255,107,53,0.4); margin-top: -18px; border: 3px solid white; flex-shrink: 0; text-decoration: none; }
+.bn-plus i { font-size: 20px; color: white; }
+
+@media (min-width: 769px) { .desktop { display: flex; } .mobile { display: none; } }
+@media (max-width: 768px) { .desktop { display: none; } .mobile { display: flex; } }
+</style>
+</head>
+<body>
+
+<!-- DESKTOP -->
+<div class="desktop">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-text"><div class="bname">PropCRM</div><div class="bsub">Real Estate Suite</div></div>
+    </div>
+    <nav class="snav">
+      <div class="grp-title">Main</div>
+      <a class="nav-item" href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="nav-item" href="{% url 'add_lead' %}"><i class="fas fa-plus-circle"></i> Add Lead</a>
+      {% if request.user.is_superuser %}
+      <div class="grp-title">Admin</div>
+      <a class="nav-item" href="{% url 'manage_users' %}"><i class="fas fa-user-friends"></i> Manage Users</a>
+      <a class="nav-item" href="{% url 'import_leads' %}"><i class="fas fa-file-upload"></i> Import Leads</a>
+      <a class="nav-item" href="{% url 'export_leads' %}"><i class="fas fa-file-download"></i> Export CSV</a>
+      {% endif %}
+    </nav>
+    <div class="sfooter">
+      <div class="user-row">
+        <div class="ava">{{ request.user.username|first|upper }}</div>
+        <div><div class="uname">{{ request.user.username }}</div><div class="urole">{% if request.user.is_superuser %}Administrator{% else %}Sales User{% endif %}</div></div>
+      </div>
+      <a href="{% url 'logout' %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;color:#8E8E93;font-size:13px;text-decoration:none;margin-top:4px;border-radius:10px;" onmouseover="this.style.background='#F5F5F7'" onmouseout="this.style.background='transparent'">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </aside>
+
+  <div class="dmain">
+    <div class="topbar">
+      <div class="greeting">All <span>Leads</span></div>
+      <div class="tbar-right">
+        <a href="{% url 'add_lead' %}" class="add-btn"><i class="fas fa-plus"></i> Add Lead</a>
+      </div>
+    </div>
+
+    <div class="dcontent">
+      <div class="dtab-row">
+        <a class="dtab" href="{% url 'dashboard' %}">Today</a>
+        <a class="dtab active" href="{% url 'all_leads' %}">All Leads</a>
+        <a class="dtab" href="{% url 'analytics' %}">Analytics</a>
+      </div>
+
+      <!-- Filters -->
+      <form method="get">
+        <div class="filters">
+          <div class="search-inp">
+            <i class="fas fa-search" style="color:#8E8E93;font-size:13px;"></i>
+            <input type="text" name="search" value="{{ search }}" placeholder="Search name or phone...">
+          </div>
+          <select name="pipeline" class="filter-select">
+            <option value="">All Pipeline</option>
+            {% for val, label in pipeline_choices %}
+            <option value="{{ val }}" {% if pipeline_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select name="temperature" class="filter-select">
+            <option value="">All Temperature</option>
+            {% for val, label in temperature_choices %}
+            <option value="{{ val }}" {% if temperature_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <select name="source" class="filter-select">
+            <option value="">All Sources</option>
+            {% for val, label in source_choices %}
+            <option value="{{ val }}" {% if source_filter == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Filter</button>
+          <a href="{% url 'all_leads' %}" class="clear-btn">Clear</a>
+        </div>
+      </form>
+
+      <div class="tcard">
+        <div class="total-row">
+          <span>Showing <strong>{{ leads.count }}</strong> leads</span>
+          {% if request.user.is_superuser %}
+          <a href="{% url 'export_leads' %}" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;"><i class="fas fa-download"></i> Export CSV</a>
+          {% endif %}
+        </div>
+        <table>
+          <thead>
+            <tr>
+
+              <th>#</th>
+              <th>Lead</th>
+              <th>Property</th>
+              <th>City</th>
+              <th>Budget</th>
+              <th>Source</th>
+              <th>Pipeline</th>
+              <th>Temp</th>
+              {% if request.user.is_superuser %}<th>Assigned</th>{% endif %}
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for lead in leads %}
+            <tr>
+              <td style="color:var(--text-muted);font-size:12px;">{{ forloop.counter }}</td>
+              <td><div class="tln">{{ lead.name }}</div><div class="tlp">{{ lead.phone }}</div></td>
+              <td>{% if lead.bhk %}{{ lead.bhk }}{% endif %} {% if lead.property_type %}{{ lead.property_type }}{% else %}—{% endif %}</td>
+              <td>{{ lead.city|default:"—" }}</td>
+              <td style="font-weight:700;color:var(--primary);">{{ lead.budget_min|budget_format }}</td>
+              <td>{{ lead.source }}</td>
+              <td><span class="sp sp-{{ lead.pipeline|lower|cut:' ' }}">{{ lead.pipeline }}</span></td>
+              <td><span class="tbadge tb-{{ lead.temperature|lower }}">{{ lead.temperature }}</span></td>
+              {% if request.user.is_superuser %}<td>{{ lead.assigned_to.username|default:"—" }}</td>{% endif %}
+              <td>
+                <div class="abts">
+                  <a href="{% url 'lead_detail' lead.pk %}" class="abt"><i class="fas fa-eye"></i></a>
+                  <a href="{% url 'edit_lead' lead.pk %}" class="abt"><i class="fas fa-pen"></i></a>
+                  <a href="https://wa.me/91{{ lead.phone }}" target="_blank" class="abt wa"><i class="fab fa-whatsapp"></i></a>
+                  {% if request.user.is_superuser %}<a href="{% url 'delete_lead' lead.pk %}" class="abt del" onclick="return confirm('Delete karna hai?')"><i class="fas fa-trash"></i></a>{% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:32px;">No leads found</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE -->
+<div class="mobile">
+  <div class="mob-top">
+    <div class="mob-topbar">
+      <div class="mob-logo-wrap">
+        <div class="mob-logo">P</div>
+        <div class="mob-brand-name">Prop<span>CRM</span></div>
+      </div>
+      <div class="mob-actions">
+        <a href="{% url 'add_lead' %}" class="mob-add-btn"><i class="fas fa-plus"></i></a>
+      </div>
+    </div>
+    <div class="mob-tabbar">
+      <div class="mob-tabs">
+        <a class="mob-tab" href="{% url 'dashboard' %}">Today</a>
+        <a class="mob-tab active" href="{% url 'all_leads' %}">All Leads</a>
+        <a class="mob-tab" href="{% url 'analytics' %}">Analytics</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mob-body">
+
+    <!-- Search -->
+    <form method="get">
+      <div class="mob-search">
+        <i class="fas fa-search" style="color:#8E8E93;font-size:13px;flex-shrink:0;"></i>
+        <input type="text" name="search" value="{{ search }}" placeholder="Search name or phone...">
+      </div>
+
+      <!-- Filter Pills -->
+      <div class="mob-filters">
+        <a href="{% url 'all_leads' %}" class="mob-filter-btn {% if not pipeline_filter and not temperature_filter %}active{% endif %}">All</a>
+        <button type="submit" name="temperature" value="Hot" class="mob-filter-btn {% if temperature_filter == 'Hot' %}active{% endif %}" style="border:none;">🔥 Hot</button>
+        <button type="submit" name="temperature" value="Warm" class="mob-filter-btn {% if temperature_filter == 'Warm' %}active{% endif %}" style="border:none;">⚡ Warm</button>
+        <button type="submit" name="temperature" value="Cold" class="mob-filter-btn {% if temperature_filter == 'Cold' %}active{% endif %}" style="border:none;">❄️ Cold</button>
+        <button type="submit" name="pipeline" value="New" class="mob-filter-btn {% if pipeline_filter == 'New' %}active{% endif %}" style="border:none;">New</button>
+        <button type="submit" name="pipeline" value="Contacted" class="mob-filter-btn {% if pipeline_filter == 'Contacted' %}active{% endif %}" style="border:none;">Contacted</button>
+        <button type="submit" name="pipeline" value="Closed Won" class="mob-filter-btn {% if pipeline_filter == 'Closed Won' %}active{% endif %}" style="border:none;">Won ✓</button>
+      </div>
+    </form>
+
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">{{ leads.count }} leads found</div>
+
+    {% for lead in leads %}
+    <div class="mcard {{ lead.temperature|lower }}">
+      <div class="mc-row1">
+        <div><div class="mc-name">{{ lead.name }}</div><div class="mc-phone">{{ lead.phone }}</div></div>
+        <span class="tbadge tb-{{ lead.temperature|lower }}">{{ lead.temperature }}</span>
+      </div>
+      <div class="mc-tags">
+        {% if lead.property_type %}<div class="mc-tag"><i class="fas fa-home"></i> {{ lead.bhk }} {{ lead.property_type }}</div>{% endif %}
+        {% if lead.location_preference %}<div class="mc-tag"><i class="fas fa-map-marker-alt"></i> {{ lead.location_preference }}</div>{% endif %}
+        <div class="mc-tag"><i class="fas fa-tag"></i> {{ lead.source }}</div>
+      </div>
+      <div class="mc-row2">
+        {% if lead.budget_min %}<div class="mc-budget">₹{{ lead.budget_min|floatformat:0 }}</div>{% else %}<div class="mc-budget">—</div>{% endif %}
+        <span class="sp sp-{{ lead.pipeline|lower|cut:' ' }}">{{ lead.pipeline }}</span>
+      </div>
+      <div class="mc-btns">
+        <a href="{% url 'lead_detail' lead.pk %}" class="mc-btn view"><i class="fas fa-eye"></i> View</a>
+        <a href="tel:{{ lead.phone }}" class="mc-btn call"><i class="fas fa-phone"></i> Call</a>
+        <a href="https://wa.me/91{{ lead.phone }}" target="_blank" class="mc-btn wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+      </div>
+    </div>
+    {% empty %}
+    <div style="background:white;border-radius:14px;border:1px solid var(--border);padding:32px;text-align:center;color:var(--text-muted);font-size:13px;">No leads found</div>
+    {% endfor %}
+
+  </div>
+
+  <div class="mob-nav">
+    <a href="{% url 'dashboard' %}" class="bn-item"><i class="fas fa-home"></i><span class="bn-lbl">Today</span></a>
+    <a href="{% url 'all_leads' %}" class="bn-item active"><i class="fas fa-users"></i><span class="bn-lbl">Leads</span></a>
+    <a href="{% url 'add_lead' %}" class="bn-plus"><i class="fas fa-plus"></i></a>
+    <a href="{% url 'analytics' %}" class="bn-item"><i class="fas fa-chart-pie"></i><span class="bn-lbl">Analytics</span></a>
+    <a href="{% url 'logout' %}" class="bn-item"><i class="fas fa-sign-out-alt"></i><span class="bn-lbl">Logout</span></a>
+  </div>
+</div>
+
+</body>
+</html>

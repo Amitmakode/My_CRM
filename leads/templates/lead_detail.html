@@ -1,0 +1,257 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PropCRM — {{ lead.name }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Sora', sans-serif; background: #F5F5F7; min-height: 100vh; padding: 24px 16px 40px; }
+
+.page-wrap { max-width: 800px; margin: 0 auto; }
+
+.back-btn { display: inline-flex; align-items: center; gap: 6px; color: #8E8E93; font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; }
+
+.lead-header {
+  background: white; border-radius: 16px; border: 1px solid #E8E8EC;
+  padding: 20px 24px; margin-bottom: 16px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+  flex-wrap: wrap; gap: 14px;
+}
+
+.lh-left .lname { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.lh-left .lphone { font-size: 14px; color: #8E8E93; display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+
+.badges { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.badge { padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+.b-hot { background: #FFF0EE; color: #FF3B30; }
+.b-warm { background: #FFF8EE; color: #FF9500; }
+.b-cold { background: #EEF5FF; color: #007AFF; }
+.b-dead { background: #F2F2F7; color: #8E8E93; }
+.b-new { background: #EDFAF1; color: #34C759; }
+.b-contacted { background: #EEF5FF; color: #007AFF; }
+.b-visit { background: #FFF8EE; color: #FF9500; }
+.b-negotiation { background: #F3EEFF; color: #7B52FF; }
+.b-won { background: #EDFAF1; color: #34C759; }
+.b-lost { background: #FFF0EE; color: #FF3B30; }
+
+.lh-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.action-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: 10px; font-size: 13px;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+  border: 1.5px solid #E8E8EC; background: white; color: #8E8E93;
+  font-family: inherit; transition: all 0.15s;
+}
+
+.action-btn.primary { background: linear-gradient(135deg, #FF6B35, #FF9A3C); color: white; border-color: transparent; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
+.action-btn.wa { background: #EDFAF1; color: #34C759; border-color: #B7ECC5; }
+.action-btn.call { background: #EEF5FF; color: #007AFF; border-color: #C7DEFF; }
+.action-btn.danger { background: #FFF0EE; color: #FF3B30; border-color: #FFD0C0; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+.card { background: white; border-radius: 16px; border: 1px solid #E8E8EC; padding: 20px 24px; margin-bottom: 16px; }
+.card-title { font-size: 13px; font-weight: 700; color: #FF6B35; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #F5F5F7; }
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 12px; color: #8E8E93; font-weight: 500; }
+.info-value { font-size: 13px; font-weight: 600; text-align: right; }
+
+.check-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #F5F5F7; }
+.check-row:last-child { border-bottom: none; }
+.check-icon { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.check-yes { background: #EDFAF1; color: #34C759; }
+.check-no { background: #F5F5F7; color: #AEAEB2; }
+.check-label { font-size: 13px; font-weight: 500; }
+
+.activity-wrap { margin-bottom: 16px; }
+
+.act-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #F5F5F7; }
+.act-item:last-child { border-bottom: none; }
+.act-dot { width: 32px; height: 32px; border-radius: 10px; background: #FFF3EE; color: #FF6B35; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.act-text { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+.act-meta { font-size: 11px; color: #8E8E93; }
+
+.followup-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #F5F5F7; }
+.followup-item:last-child { border-bottom: none; }
+.fu-date { font-size: 13px; font-weight: 700; }
+.fu-note { font-size: 12px; color: #8E8E93; margin-top: 2px; }
+.fu-done { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.fu-done.yes { background: #EDFAF1; color: #34C759; }
+.fu-done.no { background: #FFF8EE; color: #FF9500; }
+
+.complete-btn { padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #EDFAF1; color: #34C759; border: 1px solid #B7ECC5; cursor: pointer; font-family: inherit; text-decoration: none; }
+
+.note-form { display: flex; gap: 10px; margin-top: 4px; }
+.note-input { flex: 1; background: #F5F5F7; border: 1.5px solid #E8E8EC; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-family: inherit; color: #1C1C1E; outline: none; resize: none; }
+.note-input:focus { border-color: #FF6B35; background: #FFF3EE; }
+.note-btn { padding: 10px 16px; background: linear-gradient(135deg, #FF6B35, #FF9A3C); color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+@media (max-width: 600px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .lead-header { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="{% url 'dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+
+  <!-- Lead Header -->
+  <div class="lead-header">
+    <div class="lh-left">
+      <div class="lname">{{ lead.name }}</div>
+      <div class="lphone"><i class="fas fa-phone"></i> {{ lead.phone }}</div>
+      <div class="badges">
+        <span class="badge b-{{ lead.temperature|lower }}">{{ lead.temperature }}</span>
+        <span class="badge b-{{ lead.pipeline|lower|cut:' ' }}">{{ lead.pipeline }}</span>
+        {% if lead.source %}<span class="badge" style="background:#F5F5F7;color:#8E8E93;">{{ lead.source }}</span>{% endif %}
+      </div>
+    </div>
+    <div class="lh-actions">
+      <a href="tel:{{ lead.phone }}" class="action-btn call"><i class="fas fa-phone"></i> Call</a>
+      <a href="https://wa.me/91{{ lead.phone }}" target="_blank" class="action-btn wa"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+      <a href="{% url 'edit_lead' lead.pk %}" class="action-btn primary"><i class="fas fa-pen"></i> Edit</a>
+      <a href="{% url 'add_followup' lead.pk %}" class="action-btn"><i class="fas fa-calendar-plus"></i> Followup</a>
+      {% if request.user.is_superuser %}
+      <a href="{% url 'delete_lead' lead.pk %}" class="action-btn danger" onclick="return confirm('Delete karna hai?')"><i class="fas fa-trash"></i> Delete</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- Basic Info -->
+    <div class="card">
+      <div class="card-title"><i class="fas fa-user"></i> Basic Info</div>
+      <div class="info-row"><span class="info-label">Name</span><span class="info-value">{{ lead.name }}</span></div>
+      <div class="info-row"><span class="info-label">Phone</span><span class="info-value">{{ lead.phone }}</span></div>
+      {% if lead.alternate_phone %}<div class="info-row"><span class="info-label">Alt Phone</span><span class="info-value">{{ lead.alternate_phone }}</span></div>{% endif %}
+      {% if lead.city %}<div class="info-row"><span class="info-label">City</span><span class="info-value">{{ lead.city }}</span></div>{% endif %}
+      {% if lead.email %}<div class="info-row"><span class="info-label">Email</span><span class="info-value">{{ lead.email }}</span></div>{% endif %}
+      <div class="info-row"><span class="info-label">Source</span><span class="info-value">{{ lead.source }}</span></div>
+      <div class="info-row"><span class="info-label">Added By</span><span class="info-value">{{ lead.created_by.username }}</span></div>
+      <div class="info-row"><span class="info-label">Assigned To</span><span class="info-value">{{ lead.assigned_to.username|default:"—" }}</span></div>
+      <div class="info-row"><span class="info-label">Created</span><span class="info-value">{{ lead.created_at|date:"d M Y" }}</span></div>
+    </div>
+
+    <!-- Requirement -->
+    <div class="card">
+      <div class="card-title"><i class="fas fa-home"></i> Requirement</div>
+      <div class="info-row"><span class="info-label">Property Type</span><span class="info-value">{{ lead.property_type|default:"—" }}</span></div>
+      <div class="info-row"><span class="info-label">BHK</span><span class="info-value">{{ lead.bhk|default:"—" }}</span></div>
+      <div class="info-row"><span class="info-label">Location</span><span class="info-value">{{ lead.location_preference|default:"—" }}</span></div>
+      <div class="info-row"><span class="info-label">Budget</span><span class="info-value">{% if lead.budget_min %}{{ lead.budget_min|budget_format }} – {{ lead.budget_max|budget_format }}{% else %}—{% endif %}</span></div>
+      <div class="info-row"><span class="info-label">Purpose</span><span class="info-value">{{ lead.purpose|default:"—" }}</span></div>
+      <div class="info-row"><span class="info-label">Timeline</span><span class="info-value">{{ lead.timeline|default:"—" }}</span></div>
+    </div>
+  </div>
+
+  <!-- Documents & Site Visit -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-file-alt"></i> Documents & Site Visit</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+      <div class="check-row">
+        <div class="check-icon {% if lead.brochure_sent %}check-yes{% else %}check-no{% endif %}">
+          <i class="fas fa-{% if lead.brochure_sent %}check{% else %}times{% endif %}"></i>
+        </div>
+        <span class="check-label">Brochure Sent</span>
+      </div>
+      <div class="check-row">
+        <div class="check-icon {% if lead.price_list_sent %}check-yes{% else %}check-no{% endif %}">
+          <i class="fas fa-{% if lead.price_list_sent %}check{% else %}times{% endif %}"></i>
+        </div>
+        <span class="check-label">Price List Sent</span>
+      </div>
+      <div class="check-row">
+        <div class="check-icon {% if lead.agreement_done %}check-yes{% else %}check-no{% endif %}">
+          <i class="fas fa-{% if lead.agreement_done %}check{% else %}times{% endif %}"></i>
+        </div>
+        <span class="check-label">Agreement Done</span>
+      </div>
+      <div class="check-row">
+        <div class="check-icon {% if lead.site_visit_done %}check-yes{% else %}check-no{% endif %}">
+          <i class="fas fa-{% if lead.site_visit_done %}check{% else %}times{% endif %}"></i>
+        </div>
+        <span class="check-label">Site Visit Done</span>
+      </div>
+    </div>
+    {% if lead.site_visit_date %}
+    <div class="info-row" style="margin-top:8px;"><span class="info-label">Site Visit Date</span><span class="info-value">{{ lead.site_visit_date|date:"d M Y" }}</span></div>
+    {% endif %}
+    {% if lead.site_visit_feedback %}
+    <div style="margin-top:12px;padding:12px;background:#F5F5F7;border-radius:10px;font-size:13px;color:#1C1C1E;">{{ lead.site_visit_feedback }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Notes -->
+  {% if lead.notes %}
+  <div class="card">
+    <div class="card-title"><i class="fas fa-sticky-note"></i> Notes</div>
+    <div style="font-size:13px;color:#1C1C1E;line-height:1.6;">{{ lead.notes }}</div>
+  </div>
+  {% endif %}
+
+  <!-- Followups -->
+  <div class="card">
+    <div class="card-title" style="justify-content:space-between;">
+      <span><i class="fas fa-calendar"></i> Followups</span>
+      <a href="{% url 'add_followup' lead.pk %}" style="font-size:12px;color:#FF6B35;text-decoration:none;font-weight:600;">+ Add Followup</a>
+    </div>
+    {% if followups %}
+    {% for fu in followups %}
+    <div class="followup-item">
+      <div>
+        <div class="fu-date">{{ fu.date|date:"d M Y" }} {% if fu.time %}at {{ fu.time }}{% endif %}</div>
+        {% if fu.note %}<div class="fu-note">{{ fu.note }}</div>{% endif %}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        {% if fu.done %}
+        <span class="fu-done yes">Done</span>
+        {% else %}
+        <span class="fu-done no">Pending</span>
+        <a href="{% url 'complete_followup' fu.pk %}" class="complete-btn">Mark Done</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align:center;padding:16px;color:#8E8E93;font-size:13px;">No followups yet. <a href="{% url 'add_followup' lead.pk %}" style="color:#FF6B35;text-decoration:none;font-weight:600;">Schedule one →</a></div>
+    {% endif %}
+  </div>
+
+  <!-- Activity Log -->
+  <div class="card">
+    <div class="card-title"><i class="fas fa-history"></i> Activity Log</div>
+    <form method="post" class="note-form" style="margin-bottom:16px;">
+      {% csrf_token %}
+      <textarea class="note-input" name="note" rows="1" placeholder="Add a note..."></textarea>
+      <button class="note-btn">Add</button>
+    </form>
+    <div class="activity-wrap">
+      {% for act in activities %}
+      <div class="act-item">
+        <div class="act-dot"><i class="fas fa-comment-alt"></i></div>
+        <div>
+          <div class="act-text">{{ act.note }}</div>
+          <div class="act-meta">{{ act.user.username }} · {{ act.created_at|date:"d M Y, h:i A" }}</div>
+        </div>
+      </div>
+      {% empty %}
+      <div style="text-align:center;padding:16px;color:#8E8E93;font-size:13px;">No activity yet</div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

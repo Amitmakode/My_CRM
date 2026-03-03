@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PropCRM — Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; overflow-x: hidden; }
+body { font-family: 'Sora', sans-serif; background: #F5F5F7; color: #1C1C1E; }
+
+:root {
+  --primary: #FF6B35;
+  --primary-light: #FFF3EE;
+  --bg: #F5F5F7;
+  --white: #FFFFFF;
+  --border: #E8E8EC;
+  --text: #1C1C1E;
+  --text-muted: #8E8E93;
+  --text-dim: #AEAEB2;
+  --hot: #FF3B30;
+  --warm: #FF9500;
+  --cold: #007AFF;
+  --success: #34C759;
+}
+
+/* DESKTOP */
+.desktop { display: none; min-height: 100vh; }
+
+.sidebar { width: 230px; background: var(--white); border-right: 1px solid var(--border); position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 100; }
+.brand { padding: 22px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.brand-logo { width: 38px; height: 38px; background: linear-gradient(135deg, var(--primary), #FF9A3C); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 17px; font-weight: 800; flex-shrink: 0; }
+.brand-text .bname { font-size: 16px; font-weight: 800; }
+.brand-text .bsub { font-size: 11px; color: var(--text-muted); }
+.snav { padding: 16px 12px; flex: 1; }
+.grp-title { font-size: 10px; font-weight: 700; color: var(--text-dim); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 8px; margin: 12px 0 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all 0.15s; margin-bottom: 2px; text-decoration: none; }
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+.nav-item i { width: 16px; font-size: 13px; }
+.sfooter { padding: 14px 12px; border-top: 1px solid var(--border); }
+.user-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.user-row:hover { background: var(--bg); }
+.ava { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), #FF9A3C); color: white; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.uname { font-size: 13px; font-weight: 600; }
+.urole { font-size: 11px; color: var(--text-muted); }
+
+.dmain { margin-left: 230px; flex: 1; display: flex; flex-direction: column; }
+.topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 0 28px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.greeting { font-size: 15px; font-weight: 700; }
+.greeting span { color: var(--primary); }
+
+.dcontent { padding: 24px 28px; }
+.dtab-row { display: flex; gap: 6px; margin-bottom: 24px; }
+.dtab { padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); background: var(--white); border: 1.5px solid var(--border); text-decoration: none; }
+.dtab.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 12px rgba(255,107,53,0.25); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.stat-card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 20px; text-align: center; }
+.stat-num { font-size: 36px; font-weight: 800; letter-spacing: -2px; }
+.stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 20px; }
+.chart-title { font-size: 13px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.chart-wrap { position: relative; height: 220px; }
+
+.source-list { margin-top: 4px; }
+.source-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.source-row:last-child { border-bottom: none; }
+.source-name { font-size: 13px; font-weight: 600; }
+.source-bar-wrap { flex: 1; margin: 0 12px; background: var(--bg); border-radius: 20px; height: 6px; overflow: hidden; }
+.source-bar { height: 100%; background: linear-gradient(135deg, var(--primary), #FF9A3C); border-radius: 20px; }
+.source-count { font-size: 13px; font-weight: 700; color: var(--primary); min-width: 24px; text-align: right; }
+
+/* MOBILE */
+.mobile { display: none; flex-direction: column; width: 100%; min-height: 100vh; }
+.mob-top { position: sticky; top: 0; z-index: 100; width: 100%; }
+.mob-topbar { background: var(--white); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.mob-logo-wrap { display: flex; align-items: center; gap: 8px; }
+.mob-logo { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, var(--primary), #FF9A3C); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; }
+.mob-brand-name { font-size: 16px; font-weight: 800; }
+.mob-brand-name span { color: var(--primary); }
+.mob-tabbar { background: var(--white); border-bottom: 1px solid var(--border); width: 100%; }
+.mob-tabs { display: flex; overflow-x: auto; scrollbar-width: none; padding: 0 16px; }
+.mob-tabs::-webkit-scrollbar { display: none; }
+.mob-tab { padding: 11px 16px; font-size: 13px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; white-space: nowrap; flex-shrink: 0; cursor: pointer; text-decoration: none; }
+.mob-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+.mob-body { flex: 1; padding: 16px; padding-bottom: 85px; width: 100%; }
+
+.mob-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.mob-stat { background: var(--white); border-radius: 12px; border: 1px solid var(--border); padding: 12px 8px; text-align: center; }
+.mob-stat .mnum { font-size: 22px; font-weight: 800; letter-spacing: -1px; }
+.mob-stat .mlbl { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.mob-chart-card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin-bottom: 14px; }
+.mob-chart-title { font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.mob-chart-wrap { position: relative; height: 200px; }
+
+.mob-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: var(--white); border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-around; z-index: 200; box-shadow: 0 -4px 20px rgba(0,0,0,0.06); width: 100%; }
+.bn-item { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; padding: 6px 0; cursor: pointer; text-decoration: none; }
+.bn-item i { font-size: 20px; color: var(--text-dim); }
+.bn-lbl { font-size: 10px; font-weight: 600; color: var(--text-dim); }
+.bn-item.active i { color: var(--primary); }
+.bn-item.active .bn-lbl { color: var(--primary); }
+.bn-plus { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--primary), #FF9A3C); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(255,107,53,0.4); margin-top: -18px; border: 3px solid white; flex-shrink: 0; text-decoration: none; }
+.bn-plus i { font-size: 20px; color: white; }
+
+@media (min-width: 769px) { .desktop { display: flex; } .mobile { display: none; } }
+@media (max-width: 768px) { .desktop { display: none; } .mobile { display: flex; } }
+</style>
+</head>
+<body>
+
+<!-- DESKTOP -->
+<div class="desktop">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">P</div>
+      <div class="brand-text"><div class="bname">PropCRM</div><div class="bsub">Real Estate Suite</div></div>
+    </div>
+    <nav class="snav">
+      <div class="grp-title">Main</div>
+      <a class="nav-item" href="{% url 'dashboard' %}"><i class="fas fa-th-large"></i> Dashboard</a>
+      <a class="nav-item" href="{% url 'add_lead' %}"><i class="fas fa-plus-circle"></i> Add Lead</a>
+      {% if request.user.is_superuser %}
+      <div class="grp-title">Admin</div>
+      <a class="nav-item" href="{% url 'manage_users' %}"><i class="fas fa-user-friends"></i> Manage Users</a>
+      <a class="nav-item" href="{% url 'import_leads' %}"><i class="fas fa-file-upload"></i> Import Leads</a>
+      <a class="nav-item" href="{% url 'export_leads' %}"><i class="fas fa-file-download"></i> Export CSV</a>
+      {% endif %}
+    </nav>
+    <div class="sfooter">
+      <div class="user-row">
+        <div class="ava">{{ request.user.username|first|upper }}</div>
+        <div><div class="uname">{{ request.user.username }}</div><div class="urole">{% if request.user.is_superuser %}Administrator{% else %}Sales User{% endif %}</div></div>
+      </div>
+      <a href="{% url 'logout' %}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;color:#8E8E93;font-size:13px;text-decoration:none;margin-top:4px;border-radius:10px;" onmouseover="this.style.background='#F5F5F7'" onmouseout="this.style.background='transparent'">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </a>
+    </div>
+  </aside>
+
+  <div class="dmain">
+    <div class="topbar">
+      <div class="greeting">Analytics <span>Overview</span></div>
+    </div>
+
+    <div class="dcontent">
+      <div class="dtab-row">
+        <a class="dtab" href="{% url 'dashboard' %}">Today</a>
+        <a class="dtab" href="{% url 'all_leads' %}">All Leads</a>
+        <a class="dtab active" href="{% url 'analytics' %}">Analytics</a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--primary);">{{ total }}</div>
+          <div class="stat-lbl">Total Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--hot);">{{ hot }}</div>
+          <div class="stat-lbl">Hot Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:var(--success);">{{ won }}</div>
+          <div class="stat-lbl">Closed Won</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-filter"></i> Pipeline Stages</div>
+          <div class="chart-wrap"><canvas id="pipelineChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-thermometer-half"></i> Temperature</div>
+          <div class="chart-wrap"><canvas id="tempChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="background:white;border-radius:14px;border:1px solid var(--border);padding:20px;">
+        <div class="chart-title"><i class="fas fa-tag"></i> Lead Sources</div>
+        <div class="source-list">
+          {% for item in source_data %}
+          <div class="source-row">
+            <div class="source-name">{{ item.source }}</div>
+            <div class="source-bar-wrap">
+              <div class="source-bar" style="width:{% widthratio item.count total 100 %}%"></div>
+            </div>
+            <div class="source-count">{{ item.count }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE -->
+<div class="mobile">
+  <div class="mob-top">
+    <div class="mob-topbar">
+      <div class="mob-logo-wrap">
+        <div class="mob-logo">P</div>
+        <div class="mob-brand-name">Prop<span>CRM</span></div>
+      </div>
+    </div>
+    <div class="mob-tabbar">
+      <div class="mob-tabs">
+        <a class="mob-tab" href="{% url 'dashboard' %}">Today</a>
+        <a class="mob-tab" href="{% url 'all_leads' %}">All Leads</a>
+        <a class="mob-tab active" href="{% url 'analytics' %}">Analytics</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="mob-body">
+
+    <div class="mob-stats">
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--primary);">{{ total }}</div>
+        <div class="mlbl">Total</div>
+      </div>
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--hot);">{{ hot }}</div>
+        <div class="mlbl">Hot</div>
+      </div>
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--success);">{{ won }}</div>
+        <div class="mlbl">Won</div>
+      </div>
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--warm);">{{ warm }}</div>
+        <div class="mlbl">Warm</div>
+      </div>
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--cold);">{{ cold }}</div>
+        <div class="mlbl">Cold</div>
+      </div>
+      <div class="mob-stat">
+        <div class="mnum" style="color:var(--hot);">{{ lost }}</div>
+        <div class="mlbl">Lost</div>
+      </div>
+    </div>
+
+    <div class="mob-chart-card">
+      <div class="mob-chart-title"><i class="fas fa-filter"></i> Pipeline Stages</div>
+      <div class="mob-chart-wrap"><canvas id="pipelineChartMob"></canvas></div>
+    </div>
+
+    <div class="mob-chart-card">
+      <div class="mob-chart-title"><i class="fas fa-thermometer-half"></i> Temperature</div>
+      <div class="mob-chart-wrap"><canvas id="tempChartMob"></canvas></div>
+    </div>
+
+    <div class="mob-chart-card">
+      <div class="mob-chart-title"><i class="fas fa-tag"></i> Lead Sources</div>
+      <div class="source-list">
+        {% for item in source_data %}
+        <div class="source-row">
+          <div class="source-name">{{ item.source }}</div>
+          <div class="source-bar-wrap">
+            <div class="source-bar" style="width:{% widthratio item.count total 100 %}%"></div>
+          </div>
+          <div class="source-count">{{ item.count }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="mob-nav">
+    <a href="{% url 'dashboard' %}" class="bn-item"><i class="fas fa-home"></i><span class="bn-lbl">Today</span></a>
+    <a href="{% url 'all_leads' %}" class="bn-item"><i class="fas fa-users"></i><span class="bn-lbl">Leads</span></a>
+    <a href="{% url 'add_lead' %}" class="bn-plus"><i class="fas fa-plus"></i></a>
+    <a href="{% url 'analytics' %}" class="bn-item active"><i class="fas fa-chart-pie"></i><span class="bn-lbl">Analytics</span></a>
+    <a href="{% url 'logout' %}" class="bn-item"><i class="fas fa-sign-out-alt"></i><span class="bn-lbl">Logout</span></a>
+  </div>
+</div>
+
+<script>
+const pipelineLabels = [{% for item in pipeline_data %}"{{ item.pipeline }}",{% endfor %}];
+const pipelineCounts = [{% for item in pipeline_data %}{{ item.count }},{% endfor %}];
+const tempLabels = [{% for item in temperature_data %}"{{ item.temperature }}",{% endfor %}];
+const tempCounts = [{% for item in temperature_data %}{{ item.count }},{% endfor %}];
+
+const colors = ['#FF6B35','#FF9500','#007AFF','#34C759','#7B52FF','#FF3B30','#FF9A3C'];
+
+function makeBar(id, labels, data) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{ data: data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { family: 'Sora', size: 11 } } },
+        y: { grid: { color: '#F5F5F7' }, ticks: { font: { family: 'Sora', size: 11 }, stepSize: 1 } }
+      }
+    }
+  });
+}
+
+function makeDoughnut(id, labels, data) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{ data: data, backgroundColor: ['#FF3B30','#FF9500','#007AFF','#AEAEB2'], borderWidth: 0, hoverOffset: 4 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Sora', size: 11 }, padding: 12 } }
+      },
+      cutout: '65%'
+    }
+  });
+}
+
+makeBar('pipelineChart', pipelineLabels, pipelineCounts);
+makeDoughnut('tempChart', tempLabels, tempCounts);
+makeBar('pipelineChartMob', pipelineLabels, pipelineCounts);
+makeDoughnut('tempChartMob', tempLabels, tempCounts);
+</script>
+
+</body>
+</html>

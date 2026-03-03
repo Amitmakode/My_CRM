@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PropCRM — {{ title }}</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Sora', sans-serif; background: #F5F5F7; min-height: 100vh; padding: 24px 16px; }
+
+.page-wrap { max-width: 700px; margin: 0 auto; }
+
+.back-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #8E8E93; font-size: 13px; font-weight: 600;
+  text-decoration: none; margin-bottom: 20px;
+}
+
+.page-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.page-sub { font-size: 13px; color: #8E8E93; margin-bottom: 24px; }
+
+.section {
+  background: white; border-radius: 16px;
+  border: 1px solid #E8E8EC; padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 13px; font-weight: 700;
+  color: #FF6B35; text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid1 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+.field label {
+  display: block; font-size: 12px; font-weight: 600;
+  color: #1C1C1E; margin-bottom: 6px;
+}
+
+.input-wrap {
+  display: flex; align-items: center; gap: 10px;
+  background: #F5F5F7; border: 1.5px solid #E8E8EC;
+  border-radius: 10px; padding: 10px 14px; transition: all 0.15s;
+}
+
+.input-wrap:focus-within { border-color: #FF6B35; background: #FFF3EE; }
+.input-wrap i { color: #8E8E93; font-size: 14px; flex-shrink: 0; }
+
+.input-wrap input,
+.input-wrap select,
+.input-wrap textarea {
+  border: none; background: transparent;
+  font-size: 14px; font-family: inherit;
+  color: #1C1C1E; width: 100%; outline: none;
+}
+
+.input-wrap select { cursor: pointer; }
+.input-wrap textarea { resize: none; min-height: 80px; }
+
+.checkbox-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: #F5F5F7;
+  border: 1.5px solid #E8E8EC; border-radius: 10px;
+  cursor: pointer;
+}
+
+.checkbox-row input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: #FF6B35; cursor: pointer;
+}
+
+.checkbox-row label { font-size: 13px; font-weight: 500; cursor: pointer; }
+
+.btns {
+  display: flex; gap: 10px; margin-top: 8px;
+}
+
+.save-btn {
+  flex: 1; padding: 13px;
+  background: linear-gradient(135deg, #FF6B35, #FF9A3C);
+  color: white; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+}
+
+.cancel-btn {
+  padding: 13px 24px;
+  background: white; color: #8E8E93;
+  border: 1.5px solid #E8E8EC; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  text-decoration: none; display: flex;
+  align-items: center; justify-content: center;
+}
+
+@media (max-width: 600px) {
+  .grid2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="{% url 'dashboard' %}" class="back-btn">
+    <i class="fas fa-arrow-left"></i> Back to Dashboard
+  </a>
+
+  <div class="page-title">{{ title }}</div>
+  <div class="page-sub">Fill in the lead details below</div>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <!-- Basic Info -->
+    <div class="section">
+      <div class="section-title"><i class="fas fa-user"></i> Basic Information</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Full Name *</label>
+          <div class="input-wrap">
+            <i class="fas fa-user"></i>
+            <input type="text" name="name" value="{{ form.name.value|default:'' }}" placeholder="Enter name" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Phone *</label>
+          <div class="input-wrap">
+            <i class="fas fa-phone"></i>
+            <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" placeholder="Enter phone" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Alternate Phone</label>
+          <div class="input-wrap">
+            <i class="fas fa-phone-alt"></i>
+            <input type="text" name="alternate_phone" value="{{ form.alternate_phone.value|default:'' }}" placeholder="Optional">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>City</label>
+          <div class="input-wrap">
+            <i class="fas fa-city"></i>
+            <input type="text" name="city" value="{{ form.city.value|default:'' }}" placeholder="e.g. Pune, Mumbai">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input type="email" name="email" value="{{ form.email.value|default:'' }}" placeholder="Optional">
+          </div>
+        </div>
+        <div class="field">
+          <label>Lead Source *</label>
+          <div class="input-wrap">
+            <i class="fas fa-tag"></i>
+            <select name="source">
+              {% for val, label in form.fields.source.choices %}
+              <option value="{{ val }}" {% if form.source.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requirement -->
+    <div class="section">
+      <div class="section-title"><i class="fas fa-home"></i> Property Requirement</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Property Type</label>
+          <div class="input-wrap">
+            <i class="fas fa-building"></i>
+            <select name="property_type">
+              <option value="">Select type</option>
+              {% for val, label in form.fields.property_type.choices %}
+              <option value="{{ val }}" {% if form.property_type.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>BHK</label>
+          <div class="input-wrap">
+            <i class="fas fa-bed"></i>
+            <select name="bhk">
+              <option value="">Select BHK</option>
+              {% for val, label in form.fields.bhk.choices %}
+              <option value="{{ val }}" {% if form.bhk.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Location Preference</label>
+          <div class="input-wrap">
+            <i class="fas fa-map-marker-alt"></i>
+            <input type="text" name="location_preference" value="{{ form.location_preference.value|default:'' }}" placeholder="e.g. Baner, Wakad">
+          </div>
+        </div>
+        <div class="field">
+          <label>Purpose</label>
+          <div class="input-wrap">
+            <i class="fas fa-bullseye"></i>
+            <select name="purpose">
+              <option value="">Select purpose</option>
+              {% for val, label in form.fields.purpose.choices %}
+              <option value="{{ val }}" {% if form.purpose.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Budget Min (₹)</label>
+          <div class="input-wrap">
+            <i class="fas fa-rupee-sign"></i>
+            <input type="number" name="budget_min" value="{{ form.budget_min.value|default:'' }}" placeholder="e.g. 4000000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Budget Max (₹)</label>
+          <div class="input-wrap">
+            <i class="fas fa-rupee-sign"></i>
+            <input type="number" name="budget_max" value="{{ form.budget_max.value|default:'' }}" placeholder="e.g. 5500000">
+          </div>
+        </div>
+        <div class="field">
+          <label>Timeline</label>
+          <div class="input-wrap">
+            <i class="fas fa-clock"></i>
+            <select name="timeline">
+              <option value="">Select timeline</option>
+              {% for val, label in form.fields.timeline.choices %}
+              <option value="{{ val }}" {% if form.timeline.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="section">
+      <div class="section-title"><i class="fas fa-chart-line"></i> Status</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Pipeline Stage</label>
+          <div class="input-wrap">
+            <i class="fas fa-filter"></i>
+            <select name="pipeline">
+              {% for val, label in form.fields.pipeline.choices %}
+              <option value="{{ val }}" {% if form.pipeline.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label>Temperature</label>
+          <div class="input-wrap">
+            <i class="fas fa-thermometer-half"></i>
+            <select name="temperature">
+              {% for val, label in form.fields.temperature.choices %}
+              <option value="{{ val }}" {% if form.temperature.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% if request.user.is_superuser %}
+        <div class="field">
+          <label>Assign To</label>
+          <div class="input-wrap">
+            <i class="fas fa-user-check"></i>
+            <select name="assigned_to">
+              <option value="">Unassigned</option>
+              {% for val, label in form.fields.assigned_to.choices %}
+              <option value="{{ val }}" {% if form.assigned_to.value|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="section">
+      <div class="section-title"><i class="fas fa-file-alt"></i> Documents & Site Visit</div>
+      <div class="grid2">
+        <div class="checkbox-row">
+          <input type="checkbox" name="brochure_sent" id="brochure" {% if form.brochure_sent.value %}checked{% endif %}>
+          <label for="brochure">Brochure Sent</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" name="price_list_sent" id="price" {% if form.price_list_sent.value %}checked{% endif %}>
+          <label for="price">Price List Sent</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" name="agreement_done" id="agreement" {% if form.agreement_done.value %}checked{% endif %}>
+          <label for="agreement">Agreement Done</label>
+        </div>
+        <div class="checkbox-row">
+          <input type="checkbox" name="site_visit_done" id="sitevisit" {% if form.site_visit_done.value %}checked{% endif %}>
+          <label for="sitevisit">Site Visit Done</label>
+        </div>
+        <div class="field">
+          <label>Site Visit Date</label>
+          <div class="input-wrap">
+            <i class="fas fa-calendar"></i>
+            <input type="date" name="site_visit_date" value="{{ form.site_visit_date.value|default:'' }}">
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;">
+        <div class="field">
+          <label>Site Visit Feedback</label>
+          <div class="input-wrap">
+            <i class="fas fa-comment"></i>
+            <textarea name="site_visit_feedback" placeholder="Feedback from site visit...">{{ form.site_visit_feedback.value|default:'' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="section">
+      <div class="section-title"><i class="fas fa-sticky-note"></i> Notes</div>
+      <div class="field">
+        <div class="input-wrap">
+          <i class="fas fa-pen"></i>
+          <textarea name="notes" placeholder="Any additional notes...">{{ form.notes.value|default:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="save-btn"><i class="fas fa-save"></i> Save Lead</button>
+      <a href="{% url 'dashboard' %}" class="cancel-btn">Cancel</a>
+    </div>
+
+  </form>
+</div>
+
+</body>
+</html>

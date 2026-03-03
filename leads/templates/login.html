@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PropCRM — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Sora', sans-serif;
+  background: #F5F5F7;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #E8E8EC;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+
+.logo-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, #FF6B35, #FF9A3C);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; font-weight: 800;
+  box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+}
+
+.logo-text { font-size: 20px; font-weight: 800; }
+.logo-text span { color: #FF6B35; }
+
+h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.subtitle { font-size: 13px; color: #8E8E93; margin-bottom: 28px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #1C1C1E; margin-bottom: 6px; }
+
+.input-wrap {
+  display: flex; align-items: center; gap: 10px;
+  background: #F5F5F7;
+  border: 1.5px solid #E8E8EC;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.15s;
+}
+
+.input-wrap:focus-within {
+  border-color: #FF6B35;
+  background: #FFF3EE;
+}
+
+.input-wrap i { color: #8E8E93; font-size: 14px; }
+
+.input-wrap input {
+  border: none; background: transparent;
+  font-size: 14px; font-family: inherit;
+  color: #1C1C1E; width: 100%; outline: none;
+}
+
+.error-msg {
+  background: #FFF0EE;
+  border: 1px solid #FFD0C0;
+  color: #FF3B30;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #FF6B35, #FF9A3C);
+  color: white; border: none; border-radius: 10px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+  margin-top: 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo">
+    <div class="logo-icon">P</div>
+    <div class="logo-text">Prop<span>CRM</span></div>
+  </div>
+
+  <h2>Welcome back 👋</h2>
+  <div class="subtitle">Login to your CRM account</div>
+
+  {% if error %}
+  <div class="error-msg"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label>Username</label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" name="username" placeholder="Enter username" required>
+      </div>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" name="password" placeholder="Enter password" required>
+      </div>
+    </div>
+    <button class="login-btn">Login →</button>
+  </form>
+</div>
+
+</body>
+</html>

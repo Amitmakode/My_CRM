@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PropCRM — Create User</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Sora', sans-serif; background: #F5F5F7; min-height: 100vh; padding: 24px 16px; display: flex; align-items: flex-start; justify-content: center; }
+
+.page-wrap { width: 100%; max-width: 440px; }
+
+.back-btn { display: inline-flex; align-items: center; gap: 6px; color: #8E8E93; font-size: 13px; font-weight: 600; text-decoration: none; margin-bottom: 20px; }
+
+.card { background: white; border-radius: 16px; border: 1px solid #E8E8EC; padding: 28px 24px; }
+
+.card-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+.card-sub { font-size: 13px; color: #8E8E93; margin-bottom: 24px; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #1C1C1E; margin-bottom: 6px; }
+
+.input-wrap { display: flex; align-items: center; gap: 10px; background: #F5F5F7; border: 1.5px solid #E8E8EC; border-radius: 10px; padding: 10px 14px; transition: all 0.15s; }
+.input-wrap:focus-within { border-color: #FF6B35; background: #FFF3EE; }
+.input-wrap i { color: #8E8E93; font-size: 14px; }
+.input-wrap input { border: none; background: transparent; font-size: 14px; font-family: inherit; color: #1C1C1E; width: 100%; outline: none; }
+
+.error-msg { background: #FFF0EE; border: 1px solid #FFD0C0; color: #FF3B30; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+.btns { display: flex; gap: 10px; margin-top: 8px; }
+.save-btn { flex: 1; padding: 12px; background: linear-gradient(135deg, #FF6B35, #FF9A3C); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
+.cancel-btn { padding: 12px 20px; background: white; color: #8E8E93; border: 1.5px solid #E8E8EC; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; text-decoration: none; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <a href="{% url 'manage_users' %}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Users</a>
+
+  <div class="card">
+    <div class="card-title">Create New User</div>
+    <div class="card-sub">Add a sales team member</div>
+
+    {% if error %}
+    <div class="error-msg"><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="field">
+        <label>Username</label>
+        <div class="input-wrap">
+          <i class="fas fa-user"></i>
+          <input type="text" name="username" placeholder="Enter username" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" name="password" placeholder="Enter password" required>
+        </div>
+      </div>
+      <div class="btns">
+        <button class="save-btn"><i class="fas fa-user-plus"></i> Create User</button>
+        <a href="{% url 'manage_users' %}" class="cancel-btn">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+</body>
+</html>
