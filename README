@@ -1,1 +1,1254 @@
+Create Database pgress 
+change security group must define 22,80,8000,5432
+python versionv 3.11 and 3.12 is require
+3.12 for environment
+
+git clone https://github.com/Amitmakode/My_CRM.git
+cd My_CRM
+
+then install pythoin version 3.11 and 3.12
+sudo apt update
+sudo apt upgrade -y
+
+Install Required Dependencies
+These packages are required to build Python.
+sudo apt install -y build-essential checkinstall
+sudo apt install -y libreadline-dev libncursesw5-dev libssl-dev \
+libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev \
+libffi-dev zlib1g-dev wget
+
+download python
+cd /usr/src
+sudo wget https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz
+sudo tar xzf Python-3.11.9.tgz
+
+Compile Python
+cd Python-3.11.9
+sudo ./configure --enable-optimizations
+sudo make altinstall
+
+verify installation
+python3.11 --version
+
+Install pip for Python 3.11
+python3.11 -m ensurepip
+upgrade pip: 
+python3.11 -m pip install --upgrade pip
+
+Create Virtual Environment (Recommended for Django)
+Inside your project:
+python3.11 -m venv venv
+source venv/bin/activate
+check
+python --version
+
+Install Project Requirements
+pip install -r requirements.txt
+
+Check Gunicorn Path
+Since you installed it inside virtual environment, check its location.
+Run:
+which gunicorn
+correct path:- /root/My_CRM/venv/bin/gunicorn
+
+Edit Gunicorn Service File
+Open service file:
+sudo nano /etc/systemd/system/gunicorn.service
+
+correct configuration:
+
+[Unit]
+Description=gunicorn daemon
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/root/My_CRM
+
+ExecStart=/root/My_CRM/venv/bin/gunicorn \
+          --workers 3 \
+          --bind unix:/root/My_CRM/gunicorn.sock \
+          crm.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
+
+Reload Systemd
+After saving:
+sudo systemctl daemon-reload
+
+Restart Gunicorn
+sudo systemctl restart gunicorn
+
+Check Status
+sudo systemctl status gunicorn
+correct you see active: active(running)
+
+If Still Not Working
+Check logs:
+journalctl -u gunicorn  or   journalctl -u gunicorn -n 50 --no-pager
+
+## Another Common Issue
+Sometimes people install Gunicorn in a virtual environment but run systemd as another user, so it cannot access the path.
+If that happens change:
+User=root
+or
+User=ubuntu
+depending on your server user.
+
+Quick Check (Important)
+Run this manually first:
+/root/My_CRM/venv/bin/gunicorn --bind 0.0.0.0:8000 crm.wsgi:application
+If this command runs, Gunicorn is installed correctly.
+
+Your Gunicorn service is now running successfully.
+Your status shows
+running or active then configure Nginx
+
+Install Nginx
+sudo apt update
+sudo apt install nginx -y
+
+Start it:
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+Check:
+sudo systemctl status nginx
+
+Create Nginx Config
+sudo nano /etc/nginx/sites-available/mycrm
+Paste this:
+
+server {
+    listen 80;
+    server_name YOUR_SERVER_IP;
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+
+    location /static/ {
+        root /root/My_CRM;
+    }
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+}
+
+
+Enable the Site
+sudo ln -s /etc/nginx/sites-available/mycrm /etc/nginx/sites-enabled
+
+Test Configuration
+sudo nginx -t
+
+If successful you will see:
+syntax is ok
+test is successful
+
+Restart Nginx
+sudo systemctl restart nginx
+
+Open in Browser
+http://YOUR-EC2-PUBLIC-IP
+Your Django CRM project should load
+
+iff any error comes then 
+ls /root/My_CRM/
+gunicorn.sock
+
+Test Gunicorn Socket Manually
+Run:
+curl --unix-socket /root/My_CRM/gunicorn.sock localhost
+If Django is working you should see HTML response.
+
+Check Nginx Configuration
+
+Open config:
+
+sudo nano /etc/nginx/sites-available/mycrm
+
+Make sure it looks like this:
+
+server {
+    listen 80;
+    server_name YOUR_PUBLIC_IP;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+
+    location /static/ {
+        root /root/My_CRM;
+    }
+}
+4️⃣ Test Nginx Config
+sudo nginx -t
+
+Then restart:
+
+sudo systemctl restart nginx
+5️⃣ Check Nginx Error Logs (Very Important)
+
+Run:
+
+sudo tail -50 /var/log/nginx/error.log
+
+This will show the real reason of 502.
+
+6️⃣ Check Gunicorn Logs
+journalctl -u gunicorn -n 50
+7️⃣ Fix Permission Issue (Very Common)
+
+Because your project is under /root, Nginx may not access the socket.
+
+Run:
+
+sudo chmod 755 /root
+sudo chmod -R 755 /root/My_CRM
+
+Restart services:
+
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+8️⃣ Test Gunicorn via Port (Debug)
+
+Run:
+
+/root/My_CRM/venv/bin/gunicorn --bind 0.0.0.0:8000 crm.wsgi:application
+
+Then open:
+
+http://YOUR-IP:8000
+
+If it loads, Django and Gunicorn are fine.
+
+Most Likely Issue in Your Case ⚠️
+
+Because your project path is:
+
+/root/My_CRM
+
+Nginx cannot access /root directory, causing 502.
+
+Professional Fix (Recommended)
+
+Move project to:
+
+/home/ubuntu/My_CRM
+
+or
+
+/var/www/My_CRM
+
+This is the standard production location.
+
+✅ Send me these two things and I can fix it instantly:
+
+1️⃣ Your gunicorn.service file
+2️⃣ Your nginx config file
+
+Then I’ll tell you exactly what line is causing the 502 error. 🚀
+
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Bad Request (400)</title>
+</head>
+<body>
+  <h1>Bad Request (400)</h1><p></p>
+</body>
+</html>
+
+Now the error changed from 502 → 400 Bad Request, which is actually good 👍.
+This means:
+
+✅ Nginx is working
+✅ Gunicorn is working
+✅ Django is receiving the request
+
+But Django is rejecting the request because of ALLOWED_HOSTS.
+
+Fix: Update ALLOWED_HOSTS
+
+Open Django settings:
+
+nano crm/settings.py
+
+Find this line:
+
+ALLOWED_HOSTS = []
+
+Change it to your EC2 public IP:
+
+ALLOWED_HOSTS = ['YOUR_PUBLIC_IP']
+
+Example:
+
+ALLOWED_HOSTS = ['13.233.120.45']
+
+For testing you can also temporarily use:
+
+ALLOWED_HOSTS = ['*']
+
+⚠️ '*' is fine for testing but not recommended for production.
+
+Restart Gunicorn
+
+After saving the file run:
+
+sudo systemctl restart gunicorn
+Then Open in Browser
+http://YOUR_PUBLIC_IP
+
+Your Django CRM site should load 🎉
+
+Why This Happens
+
+When DEBUG = False, Django only allows requests from domains listed in ALLOWED_HOSTS.
+
+So when you access using the EC2 public IP, Django blocks it and returns 400 Bad Request.
+
+✅ If you want, I can also show you 3 important production fixes for Django that most beginners forget:
+
+1️⃣ Static files not loading
+2️⃣ Media files configuration
+3️⃣ HTTPS with Let's Encrypt
+
+These are the final steps to make your deployment 100% production ready. 🚀
+
+502 Bad Gateway
+nginx/1.24.0 (Ubuntu)
+
+A 502 Bad Gateway from Nginx means Nginx cannot reach Gunicorn (or Gunicorn crashed). Since it worked earlier and now shows 502, we need to check three things: Gunicorn status, socket file, and Nginx config.
+
+Follow these steps in order 👇
+
+1️⃣ Check Gunicorn Status
+
+Run:
+
+sudo systemctl status gunicorn
+
+If it shows inactive or failed, restart it:
+
+sudo systemctl restart gunicorn
+2️⃣ Check Gunicorn Logs
+journalctl -u gunicorn -n 50 --no-pager
+
+Look for errors like:
+
+ModuleNotFoundError
+
+ImportError
+
+Permission denied
+
+Application failed to start
+
+3️⃣ Check if Socket File Exists
+
+Your Nginx connects to Gunicorn using a socket.
+
+Run:
+
+ls /root/My_CRM/
+
+Look for:
+
+gunicorn.sock
+
+If gunicorn.sock is missing, Gunicorn did not start properly.
+
+4️⃣ Check Nginx Error Log (Most Important)
+sudo tail -50 /var/log/nginx/error.log
+
+This will show the exact reason for 502.
+
+Typical message:
+
+connect() to unix:/root/My_CRM/gunicorn.sock failed
+5️⃣ Check Nginx Configuration
+
+Open config:
+
+sudo nano /etc/nginx/sites-available/mycrm
+
+Make sure it matches your Gunicorn socket:
+
+server {
+    listen 80;
+    server_name YOUR_PUBLIC_IP;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+
+    location /static/ {
+        root /root/My_CRM;
+    }
+}
+
+Then test:
+
+sudo nginx -t
+
+Restart:
+
+sudo systemctl restart nginx
+⚠️ Most Likely Problem
+
+Your project is located in:
+
+/root/My_CRM
+
+But Nginx runs as www-data user, which cannot access /root directory.
+
+Quick Fix
+
+Run:
+
+sudo chmod 755 /root
+sudo chmod -R 755 /root/My_CRM
+
+Then restart services:
+
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+🧠 Professional Practice (Recommended)
+
+Production apps are usually stored in:
+
+/var/www/
+
+Example:
+
+/var/www/mycrm
+
+This avoids permission issues.
+
+✅ To solve it quickly, send me the output of these two commands:
+
+sudo systemctl status gunicorn
+
+and
+
+sudo tail -20 /var/log/nginx/error.log
+
+I can identify the exact issue in seconds. 🚀
+
+t: 49.36.45.254, server: 43.205.136.192, request: "GET / HTTP/1.1", upstream: "http://unix:/root/My_CRM/gunicorn.sock:/", host: "43.205.136.192"
+2026/03/13 09:58:59 [crit] 4150#4150: *8 connect() to unix:/root/My_CRM/gunicorn.sock failed (13: Permission denied) while connecting to upstream, client: 49.36.45.254, server: 43.205.136.192, request: "GET / HTTP/1.1", upstream: "http://unix:/root/My_CRM/gunicorn.sock:/", host: "43.205.136.192"
+2026/03/13 09:59:11 [crit] 4150#4150: *8 connect() to unix:/root/My_CRM/gunicorn.sock failed (13: Permission denied) while connecting to upstream, client: 49.36.45.254, server: 43.205.136.192, request: "GET / HTTP/1.1", upstream: "http://unix:/root/My_CRM/gunicorn.sock:/", host: "43.205.136.192"
+
+Your log clearly shows the problem:
+
+connect() to unix:/root/My_CRM/gunicorn.sock failed (13: Permission denied)
+
+This means Nginx cannot access the Gunicorn socket file created by Gunicorn because it is inside the /root directory.
+
+Nginx runs as the www-data user, and it cannot access /root by default.
+
+✅ Quick Fix (Recommended)
+1️⃣ Change permissions of /root and project
+
+Run:
+
+sudo chmod 755 /root
+sudo chmod -R 755 /root/My_CRM
+2️⃣ Restart services
+sudo systemctl restart gunicorn
+sudo systemctl restart nginx
+3️⃣ Test again
+
+Open:
+
+http://43.205.136.192
+
+Your Django CRM application should load.
+
+⭐ Best Practice (Production)
+
+In real production servers, projects are not stored in /root.
+They are usually placed in:
+
+/var/www/
+
+Example:
+
+/var/www/mycrm
+
+Then permissions are clean and secure.
+
+Example structure:
+
+/var/www/mycrm
+ ├── venv
+ ├── crm
+ ├── manage.py
+ └── gunicorn.sock
+🚀 Even Better Fix (Professional)
+
+Modify your gunicorn.service so the socket has proper permissions.
+
+Edit:
+
+sudo nano /etc/systemd/system/gunicorn.service
+
+Add inside [Service]:
+
+UMask=007
+
+Example:
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/root/My_CRM
+UMask=007
+ExecStart=/root/My_CRM/venv/bin/gunicorn \
+          --workers 3 \
+          --bind unix:/root/My_CRM/gunicorn.sock \
+          crm.wsgi:application
+
+Reload:
+
+sudo systemctl daemon-reload
+sudo systemctl restart gunicorn
+📌 What You Built (Good DevOps Setup)
+
+Your stack is now:
+
+Internet
+   ↓
+Nginx
+   ↓
+Gunicorn
+   ↓
+Django (WSGI)
+
+This is the standard production architecture for Django.
+
+✅ If you want, I can also show you 3 very common mistakes in Django production deployment that cause issues later (static files, security, HTTPS). It will make your setup 100% production ready.
+
+i want to create user
+
+If you want to create a user in your Django project (for admin login), you need to create a superuser.
+
+Follow these steps. 👇
+
+1️⃣ Go to Your Project Folder
+cd ~/My_CRM
+
+Activate virtual environment:
+
+source venv/bin/activate
+2️⃣ Create Superuser
+
+Run:
+
+python manage.py createsuperuser
+
+You will be asked:
+
+Username:
+Email address:
+Password:
+Password (again):
+
+Example:
+
+Username: admin
+Email: admin@gmail.com
+Password: ********
+
+After success you will see:
+
+Superuser created successfully.
+3️⃣ Access Admin Panel
+
+Open browser:
+
+http://YOUR_SERVER_IP/admin
+
+Example:
+
+http://43.205.136.192/admin
+
+Login using the credentials you created.
+
+4️⃣ If You Get Error (Database Not Migrated)
+
+Run migrations first:
+
+python manage.py migrate
+
+Then create superuser again.
+
+5️⃣ Check Admin Enabled
+
+In settings.py make sure:
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+]
+
+✅ Now you can manage your CRM database from the Django Admin Dashboard.
+
+💡 Since you are deploying on Amazon Web Services EC2 with Nginx + Gunicorn, the next important step is fixing static files, otherwise CSS and JS will not load in production.
+
+If you want, I can show you the correct static files configuration for Django production. 🚀
+
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/My_CRM/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 92, in _execute_with_wrappers
+    return executor(sql, params, many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/My_CRM/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 100, in _execute
+    with self.db.wrap_database_errors:
+  File "/root/My_CRM/venv/lib/python3.12/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/root/My_CRM/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 105, in _execute
+    return self.cursor.execute(sql, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/My_CRM/venv/lib/python3.12/site-packages/django/db/backends/sqlite3/base.py", line 360, in execute
+    return super().execute(query, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: no such table: auth_user
+(venv) root@ip-172-31-40-255:~/My_CRM#
+
+The error:
+
+django.db.utils.OperationalError: no such table: auth_user
+
+means the database tables are not created yet in your Django project.
+
+The table auth_user is created by Django migrations. Since migrations were not applied, Django cannot find the table.
+
+✅ Fix Step-by-Step
+1️⃣ Go to Project Directory
+cd ~/My_CRM
+source venv/bin/activate
+2️⃣ Run Migrations
+
+Run:
+
+python manage.py migrate
+
+You should see something like:
+
+Applying contenttypes.0001_initial... OK
+Applying auth.0001_initial... OK
+Applying admin.0001_initial... OK
+Applying sessions.0001_initial... OK
+
+This creates all default tables including:
+
+auth_user
+django_admin_log
+django_session
+3️⃣ Create Superuser Again
+
+Now run:
+
+python manage.py createsuperuser
+
+Enter:
+
+Username
+Email
+Password
+
+You should see:
+
+Superuser created successfully
+4️⃣ Restart Gunicorn
+
+Since you're running with Gunicorn, restart it:
+
+sudo systemctl restart gunicorn
+5️⃣ Login to Admin Panel
+
+Open:
+
+http://43.205.136.192/admin
+
+Login with the superuser credentials.
+
+⚠️ Important Production Step
+
+After migrations you should also run:
+
+python manage.py collectstatic
+
+This prepares static files for Nginx.
+
+✅ After this your Django CRM project database will work properly.
+
+If you want, I can also show you how to connect your Django project to an RDS database on Amazon Web Services instead of SQLite, which is the recommended production setup.
+
+i am having dns  also 
+
+Great 👍 If you already have DNS, you can connect your domain to your server and run your Django app with Nginx + Gunicorn using the domain.
+
+Here is the full process.
+
+1️⃣ Point DNS to Your Server
+
+Go to your DNS provider (like GoDaddy, Namecheap, or Amazon Route 53).
+
+Create an A Record:
+
+Type	Name	Value
+A	@	YOUR EC2 PUBLIC IP
+
+Example:
+
+Type: A
+Host: @
+Value: 43.205.136.192
+TTL: 300
+
+For www domain:
+
+Type: A
+Host: www
+Value: 43.205.136.192
+
+After saving, DNS propagation may take 5–10 minutes (sometimes up to 1 hour).
+
+2️⃣ Update Django ALLOWED_HOSTS
+
+Open settings:
+
+nano ~/My_CRM/crm/settings.py
+
+Change:
+
+ALLOWED_HOSTS = ['yourdomain.com','www.yourdomain.com','43.205.136.192']
+
+Example:
+
+ALLOWED_HOSTS = ['mycrm.com','www.mycrm.com']
+
+Restart Gunicorn:
+
+sudo systemctl restart gunicorn
+3️⃣ Update Nginx Configuration
+
+Edit Nginx config:
+
+sudo nano /etc/nginx/sites-available/mycrm
+
+Change server_name:
+
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+
+    location /static/ {
+        root /root/My_CRM;
+    }
+}
+
+Test config:
+
+sudo nginx -t
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+4️⃣ Open Your Website
+
+Now open:
+
+http://yourdomain.com
+
+Your Django CRM site should load.
+
+5️⃣ Enable HTTPS (Very Important)
+
+Install SSL using Certbot.
+
+Install:
+
+sudo apt install certbot python3-certbot-nginx
+
+Run:
+
+sudo certbot --nginx
+
+Choose your domain.
+
+After that your site will work with:
+
+https://yourdomain.com
+🚀 Final Production Architecture
+User
+ ↓
+Domain (DNS)
+ ↓
+Nginx
+ ↓
+Gunicorn
+ ↓
+Django
+ ↓
+Database
+
+💡 Since you're deploying on Amazon Web Services, the next professional step would be:
+
+Use **Docker for containerized deployment
+
+Add CI/CD from **GitHub
+
+Use **Amazon RDS instead of SQLite
+
+If you want, I can also show you the complete production architecture for a Django app on AWS used by companies. 🚀
+
+give step by step
+
+I’ll give you a clear step-by-step process to connect your DNS domain to your Django project running with Nginx + Gunicorn + Django.
+
+Assume:
+Server IP = 43.205.136.192
+
+Step 1 — Add DNS Record
+
+Go to your DNS provider (like GoDaddy, Namecheap, or Amazon Route 53).
+
+Create A records:
+
+Type	Name	Value
+A	@	43.205.136.192
+A	www	43.205.136.192
+
+Example:
+
+Type: A
+Host: @
+Value: 43.205.136.192
+TTL: 300
+
+Wait 5–15 minutes for DNS propagation.
+
+Step 2 — Verify Domain Points to Server
+
+Run:
+
+ping yourdomain.com
+
+If it returns your server IP:
+
+43.205.136.192
+
+DNS is working.
+
+Step 3 — Update Django ALLOWED_HOSTS
+
+Open settings:
+
+nano ~/My_CRM/crm/settings.py
+
+Find:
+
+ALLOWED_HOSTS = []
+
+Change to:
+
+ALLOWED_HOSTS = ['yourdomain.com','www.yourdomain.com']
+
+Example:
+
+ALLOWED_HOSTS = ['mycrm.com','www.mycrm.com']
+
+Restart Gunicorn:
+
+sudo systemctl restart gunicorn
+Step 4 — Configure Nginx for Domain
+
+Open Nginx config:
+
+sudo nano /etc/nginx/sites-available/mycrm
+
+Change to:
+
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+
+    location /static/ {
+        root /root/My_CRM;
+    }
+}
+Step 5 — Enable Config
+sudo ln -s /etc/nginx/sites-available/mycrm /etc/nginx/sites-enabled
+Step 6 — Test Nginx
+sudo nginx -t
+
+You should see:
+
+syntax is ok
+test is successful
+Step 7 — Restart Nginx
+sudo systemctl restart nginx
+Step 8 — Open Website
+
+Open browser:
+
+http://yourdomain.com
+
+Your Django project should load 🎉
+
+Step 9 — Enable HTTPS (Recommended)
+
+Install Certbot.
+
+sudo apt install certbot python3-certbot-nginx
+
+Run:
+
+sudo certbot --nginx
+
+Select your domain.
+
+Now your website will run on:
+
+https://yourdomain.com
+Final Architecture (Production)
+User
+ ↓
+Domain (DNS)
+ ↓
+Nginx
+ ↓
+Gunicorn
+ ↓
+Django
+ ↓
+Database
+
+✅ If you want, tell me your domain name, and I will give you the exact Nginx configuration for your server so it works immediately.
+
+in aws i will use routr 53 sevice
+
+If you want to use Amazon Route 53 to connect your domain to your Django server, follow these exact steps. This will point your domain to your EC2 server where Nginx + Gunicorn + Django are running.
+
+Step 1 — Open Route 53
+
+Login to **Amazon Web Services Console
+
+Search Route 53
+
+Open Hosted Zones
+
+Step 2 — Create Hosted Zone
+
+Click Create hosted zone
+
+Fill:
+
+Domain name: yourdomain.com
+Type: Public hosted zone
+
+Click Create hosted zone
+
+You will see 4 Name Servers (NS) like:
+
+ns-123.awsdns-45.com
+ns-234.awsdns-67.net
+ns-345.awsdns-89.org
+ns-456.awsdns-12.co.uk
+Step 3 — Update Nameservers in Domain Provider
+
+If you bought the domain from GoDaddy, Namecheap, etc:
+
+Go to domain DNS settings
+
+Replace nameservers with the Route 53 nameservers
+
+Example:
+
+ns-123.awsdns-45.com
+ns-234.awsdns-67.net
+ns-345.awsdns-89.org
+ns-456.awsdns-12.co.uk
+
+Save.
+
+DNS propagation may take 10–30 minutes.
+
+Step 4 — Create A Record in Route 53
+
+Inside your hosted zone:
+
+Click Create Record
+
+Record 1
+Record name: yourdomain.com
+Record type: A
+Value: 43.205.136.192
+TTL: 300
+Record 2
+Record name: www
+Record type: A
+Value: 43.205.136.192
+
+Now your domain will point to your EC2 server.
+
+Step 5 — Update Django ALLOWED_HOSTS
+
+Open settings:
+
+nano ~/My_CRM/crm/settings.py
+
+Change:
+
+ALLOWED_HOSTS = ['yourdomain.com','www.yourdomain.com']
+
+Restart Gunicorn:
+
+sudo systemctl restart gunicorn
+Step 6 — Update Nginx
+
+Open config:
+
+sudo nano /etc/nginx/sites-available/mycrm
+
+Change:
+
+server_name yourdomain.com www.yourdomain.com;
+
+Example:
+
+server {
+    listen 80;
+    server_name yourdomain.com www.yourdomain.com;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/root/My_CRM/gunicorn.sock;
+    }
+}
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+Step 7 — Test Domain
+
+Open browser:
+
+http://yourdomain.com
+
+Your Django site should load.
+
+Step 8 — Enable HTTPS (Recommended)
+
+Install Certbot:
+
+sudo apt install certbot python3-certbot-nginx
+
+Run:
+
+sudo certbot --nginx
+
+Now your site will work with:
+
+https://yourdomain.com
+Final Architecture (Professional Setup)
+User
+ ↓
+Route 53 (DNS)
+ ↓
+Domain
+ ↓
+Nginx
+ ↓
+Gunicorn
+ ↓
+Django
+ ↓
+Database
+
+✅ If you want, I can also show you how companies deploy Django on AWS with Route 53 + Load Balancer + Auto Scaling, which is the real production architecture used in DevOps jobs. 🚀
+
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+(venv) root@ip-172-31-40-255:~/My_CRM# sudo certbot --nginx
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Enter email address (used for urgent renewal and security notices)
+ (Enter 'c' to cancel): c
+An e-mail address or --register-unsafely-without-email must be provided.
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+
+You ran Certbot with Nginx, but you pressed c, which cancels the process. Certbot needs an email address to register the SSL certificate from Let's Encrypt.
+
+Let’s do it correctly step-by-step.
+
+Step 1 — Run Certbot Again
+sudo certbot --nginx
+Step 2 — Enter Email
+
+It will ask:
+
+Enter email address (used for urgent renewal and security notices)
+
+Example:
+
+admin@yourdomain.com
+
+Press Enter.
+
+Step 3 — Accept Terms
+
+You will see:
+
+Please read the Terms of Service
+
+Type:
+
+A
+
+and press Enter.
+
+Step 4 — Email Sharing Option
+
+It will ask:
+
+Would you like to share your email with the EFF?
+
+You can type:
+
+N
+
+or
+
+Y
+
+Both are fine.
+
+Step 5 — Select Your Domain
+
+Certbot will show domains from your Amazon Route 53 DNS and Nginx config.
+
+Example:
+
+1: yourdomain.com
+2: www.yourdomain.com
+
+Select:
+
+1,2
+
+Press Enter.
+
+Step 6 — Redirect HTTP → HTTPS
+
+It will ask:
+
+1: No redirect
+2: Redirect HTTP to HTTPS
+
+Choose:
+
+2
+
+This forces secure HTTPS.
+
+Step 7 — SSL Installed 🎉
+
+You should see:
+
+Congratulations! Your certificate and chain have been saved.
+
+Your site will now work on:
+
+https://yourdomain.com
+Step 8 — Test SSL
+
+Open browser:
+
+https://yourdomain.com
+
+You should see a secure lock icon 🔒.
+
+Step 9 — Auto Renewal Check
+
+Check renewal:
+
+sudo certbot renew --dry-run
+
+Certificates from Let's Encrypt renew automatically every 90 days.
+
+✅ Now your Django app running with Gunicorn + Nginx is fully secured with HTTPS.
+
+If you want, I can also show you a small but important production improvement for Nginx (security + performance) that most beginners miss when deploying Django. 🚀
+
+
+Which names would you like to activate HTTPS for?
+We recommend selecting either all domains, or all domains in a VirtualHost/server block.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+1: www.devk.co.in
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Select the appropriate numbers separated by commas and/or spaces, or leave input
+blank to select all options shown (Enter 'c' to cancel):
+
+You are at the domain selection step of Certbot. This means it detected your domain from the Nginx configuration. Good progress 👍
+
+Your screen shows:
+
+1: www.devk.co.in
+What You Should Do
+
+Since there is only one option, just type:
+
+1
+
+and press Enter.
+
+(or you can just press Enter without typing anything to select all).
+
+Next Step
+
+After selecting the domain, Certbot will ask:
+
+1: No redirect
+2: Redirect HTTP to HTTPS
+
+Choose:
+
+2
+
+This will automatically redirect HTTP → HTTPS.
+
+Example:
+
+http://www.devk.co.in  →  https://www.devk.co.in
+After Installation
+
+If successful, you will see something like:
+
+Congratulations! You have successfully enabled HTTPS.
+
+Now your site will work with:
+
+https://www.devk.co.in
+Test Your Website
+
+Open in browser:
+
+https://www.devk.co.in
 
