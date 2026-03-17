@@ -13,6 +13,7 @@ A Django-based Customer Relationship Management system to manage contacts, leads
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Local Setup](#local-setup)
+- [Development to Production](#development-to-production)
 - [Production Deployment (AWS EC2)](#production-deployment-aws-ec2)
 - [Common Errors & Fixes](#common-errors--fixes)
 - [Contact](#contact)
@@ -53,6 +54,91 @@ python manage.py runserver
 ```
 
 Visit: `http://127.0.0.1:8000`
+
+---
+
+## 🔄 Development to Production
+
+Before deploying to production, follow these steps carefully.
+
+### 1. Update settings.py
+
+Open `crm/settings.py` and change the following:
+
+```python
+# ❌ Development (change this)
+DEBUG = True
+ALLOWED_HOSTS = []
+
+# ✅ Production (to this)
+DEBUG = False
+ALLOWED_HOSTS = ['YOUR_EC2_PUBLIC_IP']
+```
+
+### 2. Add Security Settings
+
+In the same `settings.py` file, add these lines:
+
+```python
+# Security settings for production
+SECURE_BROWSER_XSS_FILTER = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+```
+
+### 3. Add Whitenoise for Static Files
+
+Install whitenoise:
+
+```bash
+pip install whitenoise
+```
+
+In `settings.py`, add whitenoise to `MIDDLEWARE`:
+
+```python
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # ← add this line
+    ...
+]
+```
+
+Also add at the bottom of `settings.py`:
+
+```python
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+```
+
+### 4. Collect Static Files
+
+```bash
+python manage.py collectstatic
+```
+
+### 5. Update requirements.txt
+
+Make sure these are in your `requirements.txt`:
+
+```
+gunicorn
+whitenoise
+```
+
+To update it run:
+
+```bash
+pip freeze > requirements.txt
+```
+
+### 6. Restart Gunicorn
+
+After all changes, restart Gunicorn:
+
+```bash
+sudo systemctl restart gunicorn
+```
 
 ---
 
@@ -203,6 +289,7 @@ Visit: `http://YOUR_EC2_PUBLIC_IP`
 | `502 Bad Gateway` | Gunicorn not running or socket missing | `sudo systemctl restart gunicorn` |
 | `400 Bad Request` | IP not in `ALLOWED_HOSTS` | Add your IP to `ALLOWED_HOSTS` in `settings.py` |
 | Socket permission denied | `/root` not accessible by Nginx | `sudo chmod 755 /root && sudo chmod -R 755 /root/My_CRM` |
+| Static files not loading | `collectstatic` not run | Run `python manage.py collectstatic` |
 
 **Useful debug commands:**
 
@@ -220,7 +307,6 @@ curl --unix-socket /root/My_CRM/gunicorn.sock localhost
 **Amit Makode** — [@Amitmakode](https://github.com/Amitmakode)
 
 > ⭐ Star this repo if you found it helpful!
-
 
 
 
